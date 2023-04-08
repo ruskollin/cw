@@ -15,12 +15,18 @@ app.get('/stations', (request, response) => {
 })
 
 app.get('/bikes', async (request, response) => {
-    Bike.find({}).then(bikes => {
-        response.json(bikes)
-      })
+    let page= 1
+    let limit = 400
+  
+    const skip = (page - 1) * 10;
+    const bikes = await Bike.find()
+      .skip(skip)
+      .limit(limit);
+    response.json(bikes);
+    // Bike.find({}).then(bikes => {
+    //     response.json(bikes[0])
+    //   })
 })
-
-app.use('/api/bikes', bikeRouter)
 
 const PORT = 3007
 app.listen(PORT, () => {

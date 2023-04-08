@@ -9,7 +9,7 @@ mongoose.set('strictQuery',false)
 
 mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
   .then((res) => {
-    console.log('connected to MongoDB')
+    console.log('connected to MongoDB for stations')
   })
   .catch((error) => {
     console.log('error connecting to MongoDB:', error.message)

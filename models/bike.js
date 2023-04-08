@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const dotenv = require("dotenv");
+
 dotenv.config();
 const url = process.env.MONGODB_URI
 
@@ -9,7 +10,7 @@ mongoose.set('strictQuery',false)
 
 mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
   .then((res) => {
-    console.log('connected to MongoDB')
+    console.log('connected to MongoDB for bikes')
   })
   .catch((error) => {
     console.log('error connecting to MongoDB:', error.message)
@@ -61,9 +62,10 @@ const bikeSchema = new mongoose.Schema({
 
 bikeSchema.set('toJSON', {
   transform: (document, returnedObject) => {
+    console.log(returnedObject)
     returnedObject.id = returnedObject._id.toString()
     delete returnedObject._id
   },
 })
 
-module.exports = mongoose.model('bikes_may', bikeSchema)
+module.exports = mongoose.model('Bikes', bikeSchema)
