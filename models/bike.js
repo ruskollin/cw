@@ -62,7 +62,6 @@ const bikeSchema = new mongoose.Schema({
 
 bikeSchema.set('toJSON', {
   transform: (document, returnedObject) => {
-    console.log(returnedObject)
     returnedObject.id = returnedObject._id.toString()
     delete returnedObject._id
   },

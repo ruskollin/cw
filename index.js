@@ -14,18 +14,28 @@ app.get('/stations', (request, response) => {
     })
 })
 
-app.get('/bikes', async (request, response) => {
-    let page= 1
-    let limit = 400
-  
-    const skip = (page - 1) * 10;
+app.get('/journeys', async (request, response) => {
+    let page = request.query.pageNum
+    let limit = 10000
+
+    const skip = (page - 1) * limit;
+    console.log(page, limit, skip)
     const bikes = await Bike.find()
-      .skip(skip)
-      .limit(limit);
+        .skip(skip)
+        .limit(limit);
     response.json(bikes);
     // Bike.find({}).then(bikes => {
     //     response.json(bikes[0])
     //   })
+})
+
+app.get('/journeys/search', async (request, response) => {
+    let value = request.query.filterWord * 60
+    console.log('to find duration with value: ', value)
+    var query = { Duration: new RegExp(400)};
+    let limit = 1000
+    const bikes = await Bike.find(query).limit(limit)
+    response.json(bikes);
 })
 
 const PORT = 3007
