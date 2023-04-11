@@ -19,7 +19,7 @@ app.get('/journeys', async (request, response) => {
     let limit = 10000
 
     const skip = (page - 1) * limit;
-    console.log(page, limit, skip)
+    // console.log(page, limit, skip)
     const bikes = await Bike.find()
         .skip(skip)
         .limit(limit);
@@ -36,6 +36,15 @@ app.get('/journeys/search', async (request, response) => {
     let limit = 1000
     const bikes = await Bike.find(query).limit(limit)
     response.json(bikes);
+})
+
+app.post('/stations', async (request, response) => {
+    let stationName = request.body.params.stationName
+    var departureQuery = { Departure_station_name: stationName};
+    const departuresFromStation = await Bike.find(departureQuery)
+    var returnQuery = { Return_station_name: stationName};
+    const returnsToStation = await Bike.find(returnQuery)
+    response.json({earliestDeparture: departuresFromStation[0], totalDeparturesFromStation: departuresFromStation.length, earliestReturn: returnsToStation[0], totalReturnsToStation: returnsToStation.length});
 })
 
 const PORT = 3007
