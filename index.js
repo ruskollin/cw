@@ -4,6 +4,7 @@ const cors = require('cors')
 const Station = require('./models/station')
 const Bike = require('./models/bike')
 const bikeRouter = require('./controllers/bikes')
+const station = require('./models/station')
 
 app.use(express.json())
 app.use(cors())
@@ -44,7 +45,10 @@ app.post('/stations', async (request, response) => {
     const departuresFromStation = await Bike.find(departureQuery)
     var returnQuery = { Return_station_name: stationName};
     const returnsToStation = await Bike.find(returnQuery)
-    response.json({earliestDeparture: departuresFromStation[0], totalDeparturesFromStation: departuresFromStation.length, earliestReturn: returnsToStation[0], totalReturnsToStation: returnsToStation.length});
+    var stationQuery = { Nimi: stationName};
+    const stationDetails = await Station.find(stationQuery)
+    const address = stationDetails.map((station) => station.Osoite)
+    response.json({stationName: address, earliestDeparture: departuresFromStation[0], totalDeparturesFromStation: departuresFromStation.length, earliestReturn: returnsToStation[0], totalReturnsToStation: returnsToStation.length});
 })
 
 const PORT = 3007
