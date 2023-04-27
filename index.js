@@ -3,8 +3,6 @@ const app = express()
 const cors = require('cors')
 const Station = require('./models/station')
 const Bike = require('./models/bike')
-const bikeRouter = require('./controllers/bikes')
-const station = require('./models/station')
 
 app.use(express.json())
 app.use(cors())
@@ -45,7 +43,7 @@ app.post('/stations', async (request, response) => {
     const chosenMonth = request.body.params.month;
     const year = new Date().getFullYear();
     const monthNumber = new Date(`${chosenMonth} 1, ${year}`).getMonth() + 1;
-  
+
     let departuresFromStation = [];
     const departureQueryAll = { Departure_station_name: stationName };
     const departureQueryMonthly = {
@@ -54,7 +52,7 @@ app.post('/stations', async (request, response) => {
             $eq: [{ $month: "$Departure" }, monthNumber]
         }
     };
-   
+
     let returnsToStation = [];
     const returnQueryAll = { Return_station_name: stationName };
     const returnQueryMonthly = {
@@ -118,6 +116,24 @@ app.post('/stations', async (request, response) => {
 
 app.post('/stations/:stationName/:month', async (request, response) => {
     console.log(request.body)
+})
+
+app.post('/stations/addNew', async (request, response) => {
+    console.log('Incoming data... ', request.body)
+
+    try {
+        const dataStation = request.body
+        const newStation = new Station({ ID: 0, Namn: dataStation.nameStation, Name: dataStation.nameStation, Osoite: dataStation.address, Stad: dataStation.city, FID: 0, Nimi: dataStation.nameStation, Adress: dataStation.address, Kaupunki: dataStation.city, Operaattor: dataStation.operator, Kapasiteet: dataStation.capacity, x: dataStation.xMap, y: dataStation.yMap });
+        newStation.save()
+        .then(doc => {
+          console.log('New staton saved:', doc);
+        })
+        .catch(err => {
+          console.error('Error inserting station:', err);
+        });
+    } catch (err) {
+        console.log('Error: ', err)
+    }
 })
 
 
