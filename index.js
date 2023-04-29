@@ -20,8 +20,9 @@ app.get('/journeys', async (request, response) => {
     // const skip = (page - 1) * limit;
     // console.log(page, limit, skip)
     const journeys = await Bike.find()
-        // .skip(skip)
+        .sort({ _id: -1 })
         .limit(limit);
+        
     response.json(journeys);
     // Bike.find({}).then(bikes => {
     //     response.json(bikes[0])
@@ -118,24 +119,59 @@ app.post('/stations/:stationName/:month', async (request, response) => {
     console.log(request.body)
 })
 
+async function getIDLastStation() {
+    const latestStation = await Station.findOne().sort({ FID: -1 }).exec();
+    return { latestStationFID: latestStation.FID, latestStationID: latestStation.ID };
+}
+
 app.post('/stations/addNew', async (request, response) => {
-    console.log('Incoming data... ', request.body)
+    console.log('Incoming station data... ', request.body)
 
     try {
         const dataStation = request.body
-        const newStation = new Station({ ID: 0, Namn: dataStation.nameStation, Name: dataStation.nameStation, Osoite: dataStation.address, Stad: dataStation.city, FID: 0, Nimi: dataStation.nameStation, Adress: dataStation.address, Kaupunki: dataStation.city, Operaattor: dataStation.operator, Kapasiteet: dataStation.capacity, x: dataStation.xMap, y: dataStation.yMap });
+        const latestStationData = await getIDLastStation()
+        const latestStationFID = latestStationData.latestStationFID
+        const latestStationID = latestStationData.latestStationID
+
+        const newStation = new Station({ FID: latestStationFID + 1, ID: latestStationID + 1, Namn: dataStation.nameStation, Name: dataStation.nameStation, Osoite: dataStation.address, Stad: dataStation.city, Nimi: dataStation.nameStation, Adress: dataStation.address, Kaupunki: dataStation.city, Operaattor: dataStation.operator, Kapasiteet: dataStation.capacity, x: dataStation.xMap, y: dataStation.yMap });
         newStation.save()
-        .then(doc => {
-          console.log('New staton saved:', doc);
-        })
-        .catch(err => {
-          console.error('Error inserting station:', err);
-        });
+            .then(doc => {
+                console.log('Successfully saved:', doc);
+                response.status(200).json({ success: true, message: 'Data saved successfully', document: doc });
+            })
+            .catch(err => {
+                console.error('Error inserting station:', err);
+                response.status(500).json({ success: false, message: `${err}` });
+            });
     } catch (err) {
-        console.log('Error: ', err)
+        console.error('Error: ', err)
+        response.status(500).json({ success: false, message: `${err}` });
     }
 })
 
+app.post('/journeys/addNew', async (request, response) => {
+    console.log('Incoming journey data... ', request.body)
+
+    const departureID = await Station.find({ Nimi: request.body.Departure_station_name })
+    const returnID = await Station.find({ Nimi: request.body.Return_station_name })
+
+    try {
+        const dataJourney = request.body
+        const newJourney = new Bike({ Return_station_id: returnID[0].ID, Departure_station_id: departureID[0].ID, Duration: dataJourney.Duration, Covered_distance: dataJourney.Covered_distance, Departure: dataJourney.Departure, Departure_station_name: dataJourney.Departure_station_name, Return: dataJourney.Return, Return_station_name: dataJourney.Return_station_name });
+        newJourney.save()
+            .then(doc => {
+                console.log('Successfully saved:', doc);
+                response.status(200).json({ success: true, message: 'Data saved successfully', document: doc });
+            })
+            .catch(err => {
+                console.error('Error inserting station:', err);
+                response.status(500).json({ success: false, message: `${err}` });
+            });
+    } catch (err) {
+        console.error('Error: ', err)
+        response.status(500).json({ success: false, message: `${err}` });
+    }
+})
 
 const PORT = 3007
 app.listen(PORT, () => {
