@@ -9,86 +9,61 @@ mongoose.set('strictQuery',false)
 
 mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
   .then((res) => {
-    console.log('connected to MongoDB for stations')
+    console.log('connected to MongoDB for bikes')
   })
   .catch((error) => {
     console.log('error connecting to MongoDB:', error.message)
   })
 
-const stationSchema = new mongoose.Schema({
-  FID: {
-    type: Number,
+const bikeSchema = new mongoose.Schema({
+  Departure: {
+    type: String,
     minlength: 1,
     required: true,
     unique: true,
   },
-  ID: {
-    type: Number,
+  Return: {
+    type: String,
     minlength:3,
     required: true
   },
-  Nimi: {
-    type: String,
-    minlength:1,
-    required: true
-  },
-  Namn: {
-    type: String,
-    minlength:1,
-    required: true
-  },
-  Name: {
-    type: String,
-    minlength:1,
-    required: true
-  },
-  Osoite: {
-    type: String,
-    minlength:1,
-    required: true
-  },
-  Adress: {
-    type: String,
-    minlength:1,
-    required: true
-  },
-  Kaupunki: {
-    type: String,
-    minlength:1,
-    required: true
-  },
-  Stad: {
-    type: String,
-    minlength:1,
-    required: true
-  },
-  Operaattor: {
-    type: String,
-    minlength:1,
-    required: true
-  },
-  Kapasiteet: {
+  Departure_station_id: {
     type: Number,
     minlength:1,
     required: true
   },
-  x: {
+  Departure_station_name: {
+    type: String,
+    minlength:1,
+    required: true
+  },
+  Return_station_id: {
     type: Number,
     minlength:1,
     required: true
   },
-  y: {
+  Return_station_name: {
+    type: String,
+    minlength:1,
+    required: true
+  },
+  Covered_distance: {
+    type: Number,
+    minlength:1,
+    required: true
+  },
+  Duration: {
     type: Number,
     minlength:1,
     required: true
   }
 })
 
-stationSchema.set('toJSON', {
+bikeSchema.set('toJSON', {
   transform: (document, returnedObject) => {
     returnedObject.id = returnedObject._id.toString()
     delete returnedObject._id
   },
 })
 
-module.exports = mongoose.model('Stations', stationSchema)
+module.exports = mongoose.model('Bikes', bikeSchema)
