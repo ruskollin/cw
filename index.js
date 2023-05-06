@@ -14,7 +14,7 @@ app.get('/stations', (request, response) => {
 })
 
 app.get('/journeys', async (request, response) => {
-    let page = request.query.pageNum
+    // let page = request.query.pageNum
     let limit = 10000
 
     // const skip = (page - 1) * limit;
