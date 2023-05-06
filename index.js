@@ -7,6 +7,10 @@ const Bike = require('./models/bike')
 app.use(express.json())
 app.use(cors())
 
+app.get('/', (request, response) => {
+    response.send("Hi!")
+})
+
 app.get('/stations', (request, response) => {
     Station.find({}).then(stations => {
         response.json(stations)
