@@ -18,30 +18,131 @@ app.get('/stations', (request, response) => {
 })
 
 app.get('/journeys', async (request, response) => {
-    // let page = request.query.pageNum
-    let limit = 10000
+    const page = request.query.page === 0 ? 1 : request.query.page
+    const pageSize = request.query.pageSize;
+    const skip = Math.max(page * pageSize, 0);
+    const limit = request.query.pageSize
 
-    // const skip = (page - 1) * limit;
-    // console.log(page, limit, skip)
+    console.log('PAGE: ', page, ' PAGESIZE: ', pageSize, ' LIMIT: ', limit)
     const journeys = await Bike.find()
         .sort({ _id: -1 })
-        .limit(limit);
-        
-    response.json(journeys);
-    // Bike.find({}).then(bikes => {
-    //     response.json(bikes[0])
-    //   })
+        .skip(skip)
+        .limit(pageSize);
+
+    const totalData = await Bike.countDocuments();
+    const totalPages = Math.ceil(totalData / limit);
+
+    const finalData = {
+        data: journeys,
+        total: totalData,
+        page: page,
+        totalPages: totalPages
+    };
+
+    response.json(finalData);
 })
 
-app.get('/journeys/search', async (request, response) => {
-    console.log(request.query)
-    // let value = request.query.filterWord * 60
-    // console.log('to find duration with value: ', value)
-    // var query = { Duration: new RegExp(400)};
-    // let limit = 1000
-    // const bikes = await Bike.find(query).limit(limit)
-    // response.json(bikes);
+//working
+// app.get('/journeys', async (request, response) => {
+//     const limit = 10000;
+//     const journeys = await Bike.find()
+//         .sort({ _id: -1 })
+//         .limit(limit);
+
+//     const totalJourneys = await Bike.countDocuments()
+//     const finalData = { journeys: journeys, total: totalJourneys }
+//     response.json(finalData);
+
+//     // Bike.find({}).then(bikes => {
+//     //     response.json(bikes[0])
+//     //   })
+// })
+
+//working to get 10000
+// app.get('/journeys', async (request, response) => {
+//     const page = request.query.page > 0 ? parseInt(request.query.page) : 1
+//     //working
+//     const pageSize = page <= 10000 ? 10000 : 100;
+//     const skip = (page - 1) * pageSize;
+//     console.log('page:', page, ' skip: ', skip)
+//     // const skip = (page - 1) * limit;
+//     // console.log(page, limit, skip)
+//     const journeys = await Bike.find()
+//         .sort({ _id: -1 })
+//         .skip(skip)
+//         .limit(pageSize);
+
+//     const totalJourneys = await Bike.countDocuments()
+//     const finalData = { journeys: journeys, total: totalJourneys }
+//     response.json(finalData);
+
+//     // Bike.find({}).then(bikes => {
+//     //     response.json(bikes[0])
+//     //   })
+// })
+
+app.get('/journeys/nextPages', async (request, response) => {
+    const page = request.query.page === 0 ? 1 : request.query.page
+    const pageSize = request.query.pageSize;
+    const skip = Math.max(page * pageSize, 0);
+    const limit = request.query.pageSize
+
+    const journeys = await Bike.find()
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(pageSize);
+
+    const totalData = await Bike.countDocuments();
+    const totalPages = Math.ceil(totalData / limit);
+
+    const finalData = {
+        data: journeys,
+        total: totalData,
+        page: page,
+        totalPages: totalPages
+    };
+
+    response.json(finalData);
+    // const page = 2
+    // const pageSize = 10000;
+    // const skip = (page - 1) * pageSize;
+    // const start = skip + 1;
+    // const end = skip + pageSize;
+
+    // console.log(start,end)
+
+    // const journeys = await Bike.find()
+    // .sort({ _id: -1 })
+    // .skip(skip)
+    // .limit(pageSize);
 })
+
+
+// app.get('/journeys/search', async (request, response) => {
+//     console.log('Searching for: ', request.query.filterWord)
+//     const filter = request.query.filterWord
+//     const pageSize = request.query.pageSize
+//     console.log('using filter: ', filter)
+//     const query ={
+//         $or: [
+//           { Departure_station_name: { $regex: filter, $options: "i" } },
+//           { Return_station_name: { $regex: filter, $options: "i" } }
+//         ]
+//       };
+//       const journeys = await Bike.find(query).limit(5000)
+//     // const journeys = await Bike.find(query).limit(5000)
+
+//     const totalData = journeys.length;
+//     const totalPages = Math.ceil(totalData / pageSize);
+
+//     const finalData = {
+//         data: journeys,
+//         total: totalData,
+//         totalPages: totalPages
+//     };
+
+//     response.json(finalData);
+// })
 
 app.post('/stations', async (request, response) => {
     const stationName = request.body.params.stationName;
@@ -177,7 +278,8 @@ app.post('/journeys/addNew', async (request, response) => {
     }
 })
 
-const PORT = process.env.PORT || 3007
+// const PORT = process.env.PORT || 3007
+const PORT = 3007
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
