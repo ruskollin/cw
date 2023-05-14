@@ -2,14 +2,10 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 const Station = require('./models/station')
-const Bike = require('./models/bike')
+const Journey = require('./models/journey')
 
 app.use(express.json())
 app.use(cors())
-
-app.get('/', (request, response) => {
-    response.send("Hi!")
-})
 
 app.get('/stations', (request, response) => {
     Station.find({}).then(stations => {
@@ -18,29 +14,27 @@ app.get('/stations', (request, response) => {
 })
 
 app.get('/journeys', async (request, response) => {
-    // let page = request.query.pageNum
-    let limit = 10000
+    const page = request.query.page === 0 ? 1 : request.query.page
+    const pageSize = request.query.pageSize;
+    const skip = Math.max(page * pageSize, 0);
+    const limit = request.query.pageSize
 
-    // const skip = (page - 1) * limit;
-    // console.log(page, limit, skip)
-    const journeys = await Bike.find()
+    const journeys = await Journey.find()
         .sort({ _id: -1 })
-        .limit(limit);
-        
-    response.json(journeys);
-    // Bike.find({}).then(bikes => {
-    //     response.json(bikes[0])
-    //   })
-})
+        .skip(skip)
+        .limit(pageSize);
 
-app.get('/journeys/search', async (request, response) => {
-    console.log(request.query)
-    // let value = request.query.filterWord * 60
-    // console.log('to find duration with value: ', value)
-    // var query = { Duration: new RegExp(400)};
-    // let limit = 1000
-    // const bikes = await Bike.find(query).limit(limit)
-    // response.json(bikes);
+    const totalData = await Journey.countDocuments();
+    const totalPages = Math.ceil(totalData / limit);
+
+    const finalData = {
+        data: journeys,
+        total: totalData,
+        page: page,
+        totalPages: totalPages
+    };
+
+    response.json(finalData);
 })
 
 app.post('/stations', async (request, response) => {
@@ -68,11 +62,11 @@ app.post('/stations', async (request, response) => {
     };
 
     if (chosenMonth !== 'All') {
-        departuresFromStation = await Bike.find(departureQueryMonthly);
-        returnsToStation = await Bike.find(returnQueryMonthly);
+        departuresFromStation = await Journey.find(departureQueryMonthly);
+        returnsToStation = await Journey.find(returnQueryMonthly);
     } else {
-        departuresFromStation = await Bike.find(departureQueryAll);
-        returnsToStation = await Bike.find(returnQueryAll)
+        departuresFromStation = await Journey.find(departureQueryAll);
+        returnsToStation = await Journey.find(returnQueryAll)
     }
 
     var stationQuery = { Nimi: stationName };
@@ -119,18 +113,12 @@ app.post('/stations', async (request, response) => {
     });
 })
 
-app.post('/stations/:stationName/:month', async (request, response) => {
-    console.log(request.body)
-})
-
 async function getIDLastStation() {
     const latestStation = await Station.findOne().sort({ FID: -1 }).exec();
     return { latestStationFID: latestStation.FID, latestStationID: latestStation.ID };
 }
 
 app.post('/stations/addNew', async (request, response) => {
-    console.log('Incoming station data... ', request.body)
-
     try {
         const dataStation = request.body
         const latestStationData = await getIDLastStation()
@@ -154,14 +142,12 @@ app.post('/stations/addNew', async (request, response) => {
 })
 
 app.post('/journeys/addNew', async (request, response) => {
-    console.log('Incoming journey data... ', request.body)
-
     const departureID = await Station.find({ Nimi: request.body.Departure_station_name })
     const returnID = await Station.find({ Nimi: request.body.Return_station_name })
 
     try {
         const dataJourney = request.body
-        const newJourney = new Bike({ Return_station_id: returnID[0].ID, Departure_station_id: departureID[0].ID, Duration: dataJourney.Duration, Covered_distance: dataJourney.Covered_distance, Departure: dataJourney.Departure, Departure_station_name: dataJourney.Departure_station_name, Return: dataJourney.Return, Return_station_name: dataJourney.Return_station_name });
+        const newJourney = new Journey({ Return_station_id: returnID[0].ID, Departure_station_id: departureID[0].ID, Duration: dataJourney.Duration, Covered_distance: dataJourney.Covered_distance, Departure: dataJourney.Departure, Departure_station_name: dataJourney.Departure_station_name, Return: dataJourney.Return, Return_station_name: dataJourney.Return_station_name });
         newJourney.save()
             .then(doc => {
                 console.log('Successfully saved:', doc);
@@ -177,7 +163,8 @@ app.post('/journeys/addNew', async (request, response) => {
     }
 })
 
-const PORT = process.env.PORT || 3007
+// const PORT = process.env.PORT || 3007
+const PORT = 3007
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
