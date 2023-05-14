@@ -2,14 +2,10 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 const Station = require('./models/station')
-const Bike = require('./models/bike')
+const Journey = require('./models/journey')
 
 app.use(express.json())
 app.use(cors())
-
-app.get('/', (request, response) => {
-    response.send("Hi!")
-})
 
 app.get('/stations', (request, response) => {
     Station.find({}).then(stations => {
@@ -23,13 +19,12 @@ app.get('/journeys', async (request, response) => {
     const skip = Math.max(page * pageSize, 0);
     const limit = request.query.pageSize
 
-    console.log('PAGE: ', page, ' PAGESIZE: ', pageSize, ' LIMIT: ', limit)
-    const journeys = await Bike.find()
+    const journeys = await Journey.find()
         .sort({ _id: -1 })
         .skip(skip)
         .limit(pageSize);
 
-    const totalData = await Bike.countDocuments();
+    const totalData = await Journey.countDocuments();
     const totalPages = Math.ceil(totalData / limit);
 
     const finalData = {
@@ -41,108 +36,6 @@ app.get('/journeys', async (request, response) => {
 
     response.json(finalData);
 })
-
-//working
-// app.get('/journeys', async (request, response) => {
-//     const limit = 10000;
-//     const journeys = await Bike.find()
-//         .sort({ _id: -1 })
-//         .limit(limit);
-
-//     const totalJourneys = await Bike.countDocuments()
-//     const finalData = { journeys: journeys, total: totalJourneys }
-//     response.json(finalData);
-
-//     // Bike.find({}).then(bikes => {
-//     //     response.json(bikes[0])
-//     //   })
-// })
-
-//working to get 10000
-// app.get('/journeys', async (request, response) => {
-//     const page = request.query.page > 0 ? parseInt(request.query.page) : 1
-//     //working
-//     const pageSize = page <= 10000 ? 10000 : 100;
-//     const skip = (page - 1) * pageSize;
-//     console.log('page:', page, ' skip: ', skip)
-//     // const skip = (page - 1) * limit;
-//     // console.log(page, limit, skip)
-//     const journeys = await Bike.find()
-//         .sort({ _id: -1 })
-//         .skip(skip)
-//         .limit(pageSize);
-
-//     const totalJourneys = await Bike.countDocuments()
-//     const finalData = { journeys: journeys, total: totalJourneys }
-//     response.json(finalData);
-
-//     // Bike.find({}).then(bikes => {
-//     //     response.json(bikes[0])
-//     //   })
-// })
-
-app.get('/journeys/nextPages', async (request, response) => {
-    const page = request.query.page === 0 ? 1 : request.query.page
-    const pageSize = request.query.pageSize;
-    const skip = Math.max(page * pageSize, 0);
-    const limit = request.query.pageSize
-
-    const journeys = await Bike.find()
-        .sort({ _id: -1 })
-        .skip(skip)
-        .limit(pageSize);
-
-    const totalData = await Bike.countDocuments();
-    const totalPages = Math.ceil(totalData / limit);
-
-    const finalData = {
-        data: journeys,
-        total: totalData,
-        page: page,
-        totalPages: totalPages
-    };
-
-    response.json(finalData);
-    // const page = 2
-    // const pageSize = 10000;
-    // const skip = (page - 1) * pageSize;
-    // const start = skip + 1;
-    // const end = skip + pageSize;
-
-    // console.log(start,end)
-
-    // const journeys = await Bike.find()
-    // .sort({ _id: -1 })
-    // .skip(skip)
-    // .limit(pageSize);
-})
-
-
-// app.get('/journeys/search', async (request, response) => {
-//     console.log('Searching for: ', request.query.filterWord)
-//     const filter = request.query.filterWord
-//     const pageSize = request.query.pageSize
-//     console.log('using filter: ', filter)
-//     const query ={
-//         $or: [
-//           { Departure_station_name: { $regex: filter, $options: "i" } },
-//           { Return_station_name: { $regex: filter, $options: "i" } }
-//         ]
-//       };
-//       const journeys = await Bike.find(query).limit(5000)
-//     // const journeys = await Bike.find(query).limit(5000)
-
-//     const totalData = journeys.length;
-//     const totalPages = Math.ceil(totalData / pageSize);
-
-//     const finalData = {
-//         data: journeys,
-//         total: totalData,
-//         totalPages: totalPages
-//     };
-
-//     response.json(finalData);
-// })
 
 app.post('/stations', async (request, response) => {
     const stationName = request.body.params.stationName;
@@ -169,11 +62,11 @@ app.post('/stations', async (request, response) => {
     };
 
     if (chosenMonth !== 'All') {
-        departuresFromStation = await Bike.find(departureQueryMonthly);
-        returnsToStation = await Bike.find(returnQueryMonthly);
+        departuresFromStation = await Journey.find(departureQueryMonthly);
+        returnsToStation = await Journey.find(returnQueryMonthly);
     } else {
-        departuresFromStation = await Bike.find(departureQueryAll);
-        returnsToStation = await Bike.find(returnQueryAll)
+        departuresFromStation = await Journey.find(departureQueryAll);
+        returnsToStation = await Journey.find(returnQueryAll)
     }
 
     var stationQuery = { Nimi: stationName };
@@ -220,18 +113,12 @@ app.post('/stations', async (request, response) => {
     });
 })
 
-app.post('/stations/:stationName/:month', async (request, response) => {
-    console.log(request.body)
-})
-
 async function getIDLastStation() {
     const latestStation = await Station.findOne().sort({ FID: -1 }).exec();
     return { latestStationFID: latestStation.FID, latestStationID: latestStation.ID };
 }
 
 app.post('/stations/addNew', async (request, response) => {
-    console.log('Incoming station data... ', request.body)
-
     try {
         const dataStation = request.body
         const latestStationData = await getIDLastStation()
@@ -255,14 +142,12 @@ app.post('/stations/addNew', async (request, response) => {
 })
 
 app.post('/journeys/addNew', async (request, response) => {
-    console.log('Incoming journey data... ', request.body)
-
     const departureID = await Station.find({ Nimi: request.body.Departure_station_name })
     const returnID = await Station.find({ Nimi: request.body.Return_station_name })
 
     try {
         const dataJourney = request.body
-        const newJourney = new Bike({ Return_station_id: returnID[0].ID, Departure_station_id: departureID[0].ID, Duration: dataJourney.Duration, Covered_distance: dataJourney.Covered_distance, Departure: dataJourney.Departure, Departure_station_name: dataJourney.Departure_station_name, Return: dataJourney.Return, Return_station_name: dataJourney.Return_station_name });
+        const newJourney = new Journey({ Return_station_id: returnID[0].ID, Departure_station_id: departureID[0].ID, Duration: dataJourney.Duration, Covered_distance: dataJourney.Covered_distance, Departure: dataJourney.Departure, Departure_station_name: dataJourney.Departure_station_name, Return: dataJourney.Return, Return_station_name: dataJourney.Return_station_name });
         newJourney.save()
             .then(doc => {
                 console.log('Successfully saved:', doc);
