@@ -11,7 +11,7 @@ This backend project is currently deployed on Heroku at **https://stations-backe
 For your adventure to start,
 
 1. Clone this repository by running `https://github.com/ruskollin/cw.git` in your terminal.
-2. Go to folder pdf by running `cd cwf`. (might be `cd pdf-generator` first)
+2. Go to folder pdf by running `cd cwf`.
 2. Install the required dependencies by running `npm install`. (might take time)
 3. Set up a MongoDB instance and provide the MongoDB URI in an .env file as follows: `MONGODB_URI=<your_mongodb_uri>`
 4. Replace <your_mongodb_uri> with the URI for your MongoDB instance.
